@@ -1,0 +1,6 @@
+*__pycache__*
+.cache
+.env
+htmlcov
+.coverage
+.idea
