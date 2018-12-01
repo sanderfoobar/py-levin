@@ -1,83 +1,80 @@
 from io import BytesIO
 
 from levin.section import Section
-from levin.utils import (
-    pack_uint32, pack_uint16, pack_uint64, pack_char, Long
-)
+from levin.exceptions import BadArgumentException
 from levin.constants import *
-
-
-class BadArgumentException(Exception):
-    def __init__(self, msg=None):
-        super(BadArgumentException, self).__init__(msg)
+from levin.ctypes import *
 
 
 class LevinWriter:
     def __init__(self, buffer: BytesIO = None):
         self.buffer = buffer
+        self._written = 0
         if not self.buffer:
             self.buffer = BytesIO()
 
     def write_payload(self, section):
-        self.write(pack_uint32(PORTABLE_STORAGE_SIGNATUREA))
-        self.write(pack_uint32(PORTABLE_STORAGE_SIGNATUREB))
-        self.write(pack_char(PORTABLE_STORAGE_FORMAT_VER))
+        self.write(bytes(PORTABLE_STORAGE_SIGNATUREA))
+        self.write(bytes(PORTABLE_STORAGE_SIGNATUREB))
+        self.write(bytes(PORTABLE_STORAGE_FORMAT_VER))
         self.put_section(section)
+        return self.buffer
 
     def put_section(self, section: Section):
         self.write_var_in(len(section))
         for k, v in section.entries.items():
             _k = k.encode('ascii')
-            self.write(pack_char(len(_k)))  # TODO: check length?
+            self.write(bytes(c_ubyte(len(_k))))
             self.write(_k)
             self.serialized_write(v)
 
     def write_section(self, section):
-        self.write(pack_char(SERIALIZE_TYPE_OBJECT))
+        self.write(bytes(SERIALIZE_TYPE_OBJECT))
         self.put_section(section)
 
-    def serialized_write(self, inp):
-        if isinstance(inp, bytes):
-            self.write(pack_char(SERIALIZE_TYPE_STRING))
-            self.write_var_in(len(inp))  # @TODO: double check if length is oki
-            self.write(inp)
-        elif isinstance(inp, str):
-            val = inp.encode('ascii')
-            self.write(pack_char(SERIALIZE_TYPE_STRING))
-            self.write_var_in(len(inp))  # @TODO: double check if length is oki
-            self.write(val)
-        elif isinstance(inp, Long):
-            self.write(pack_char(SERIALIZE_TYPE_UINT64))
-            self.write(pack_uint64(inp.to_int()))
-        elif isinstance(inp, int) and inp <= 0xFF:
-            self.write(pack_char(SERIALIZE_TYPE_UINT8))
-            self.write(pack_char(inp))
-        elif isinstance(inp, int) and inp <= 0xffffffff:
-            self.write(pack_char(SERIALIZE_TYPE_UINT32))
-            self.write(pack_uint32(inp))
-        elif isinstance(inp, int):
-            self.write(pack_char(SERIALIZE_TYPE_UINT64))
-            self.write(pack_uint64(inp))
-        elif isinstance(inp, Section):
-            self.write_section(inp)
+    def serialized_write(self, data):
+        _types = {
+            c_uint64: SERIALIZE_TYPE_UINT64,
+            c_int64: SERIALIZE_TYPE_INT64,
+            c_uint32: SERIALIZE_TYPE_UINT32,
+            c_int32: SERIALIZE_TYPE_INT32,
+            c_uint16: SERIALIZE_TYPE_UINT16,
+            c_int16: SERIALIZE_TYPE_INT16,
+            c_string: SERIALIZE_TYPE_STRING,
+            c_ubyte: SERIALIZE_TYPE_UINT8,
+            c_byte: SERIALIZE_TYPE_INT8
+        }
+
+        if type(data) in _types:
+            self.write(bytes(_types[type(data)]))
+
+            if isinstance(data, c_string):
+                self.write_var_in(len(data))
+
+            self.write(bytes(data))
+        elif isinstance(data, Section):
+            self.write_section(data)
         else:
             raise BadArgumentException("Unable to cast input to serialized data")
 
     def write_var_in(self, i: int):
+        # contrib/epee/include/storages/portable_storage_to_bin.h:pack_varint
+
         if i <= 63:
-            out = (i << 2) | PORTABLE_RAW_SIZE_MARK_BYTE
-            self.write(pack_char(out))
+            out = (i << 2) | PORTABLE_RAW_SIZE_MARK_BYTE.value
+            self.write(bytes(c_ubyte(out)))
         elif i <= 16383:
-            out = (i << 2) | PORTABLE_RAW_SIZE_MARK_WORD
-            self.write(pack_uint16(out))
+            out = (i << 2) | PORTABLE_RAW_SIZE_MARK_WORD.value
+            self.write(bytes(c_uint16(out)))
         elif i <= 1073741823:
-            out = (i << 2) | PORTABLE_RAW_SIZE_MARK_DWORD
-            self.write(pack_uint32(out))
+            out = (i << 2) | PORTABLE_RAW_SIZE_MARK_DWORD.value
+            self.write(bytes(c_uint32(out)))
         else:
             if i > 4611686018427387903:
-                raise BadArgumentException("bad value")
-            out = (i << 2) | PORTABLE_RAW_SIZE_MARK_INT64
-            self.write(pack_uint64(out))
-    
-    def write(self, data):
+                raise BadArgumentException("failed to pack varint - too big amount")
+            out = (i << 2) | PORTABLE_RAW_SIZE_MARK_INT64.value
+            self.write(bytes(c_uint64(out)))
+
+    def write(self, data, tt=None):
         self.buffer.write(data)
+        self._written += len(data)
