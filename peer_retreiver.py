@@ -3,7 +3,7 @@ import socket
 from levin.section import Section
 from levin.bucket import Bucket
 from levin.ctypes import *
-from levin.constants import *
+from levin.constants import P2P_COMMANDS, LEVIN_SIGNATURE
 
 args = sys.argv
 if len(args) != 3:
@@ -23,7 +23,8 @@ bucket = Bucket.create_handshake_request()
 
 sock.send(bucket.header())
 sock.send(bucket.payload())
-print(">> sent packet \'%s\'" % P2P_COMMANDS[bucket.command])
+
+# print(">> sent packet \'%s\'" % P2P_COMMANDS[bucket.command])
 
 buckets = []
 
@@ -35,7 +36,7 @@ while 1:
         buckets.append(bucket)
 
         if bucket.command == 1001:
-            peers = bucket.get_peers()
+            peers = bucket.get_peers() or []
 
             for peer in peers:
                 print('%s:%d' % (peer['ip'].ipv4, peer['port'].value))
