@@ -55,26 +55,29 @@ class Bucket:
 
     @staticmethod
     def create_handshake_request(my_port: int = 0, network_id: bytes = None,
-                                 peer_id: bytes = b'\x41\x41\x41\x41\x41\x41\x41\x41'):
+                                 peer_id: bytes = b'\x41\x41\x41\x41\x41\x41\x41\x41',
+                                 verbose=False):
         """
         Helper function to create a handshake request. Does not require
         parameters but you can use them to impersonate a legit node.
         :param my_port: defaults to 0
         :param network_id: defaults to mainnet
         :param peer_id:
+        :param verbose:
         :return:
         """
         handshake_section = Section.handshake_request(peer_id=peer_id, network_id=network_id, my_port=my_port)
         bucket = Bucket.create_request(1001, section=handshake_section)
 
-        print(">> created packet \'%s\'" % P2P_COMMANDS[bucket.command])
+        if verbose:
+            print(">> created packet \'%s\'" % P2P_COMMANDS[bucket.command])
 
         header = bucket.header()
         body = bucket.payload()
         return bucket
 
     @classmethod
-    def from_buffer(cls, signature: c_uint64, sock: socket.socket):
+    def from_buffer(cls, signature: c_uint64, sock: socket.socket, verbose: bool = False):
         if isinstance(signature, bytes):
             signature = c_uint64(signature)
         # if isinstance(buffer, bytes):
@@ -108,12 +111,14 @@ class Bucket:
 
         bucket.payload_section = None
 
-        print("<< received packet \'%s\'" % P2P_COMMANDS[bucket.command])
+        if verbose:
+            print("<< received packet \'%s\'" % P2P_COMMANDS[bucket.command])
 
         from levin.reader import LevinReader
         bucket.payload_section = LevinReader(BytesIO(bucket.payload)).read_payload()
 
-        print("<< parsed packet \'%s\'" % P2P_COMMANDS[bucket.command])
+        if verbose:
+            print("<< parsed packet \'%s\'" % P2P_COMMANDS[bucket.command])
         return bucket
 
     def header(self):
