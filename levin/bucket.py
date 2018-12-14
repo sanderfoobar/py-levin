@@ -136,9 +136,20 @@ class Bucket:
             raise Exception("Only handshake has peerlisting")
 
         peers = []
+
+        if 'local_peerlist_new' not in self.payload_section.entries:
+            return
+
         for peer in [e.entries for e in self.payload_section.entries['local_peerlist_new']]:
+            if 'adr' not in peer or 'addr' not in peer['adr'].entries:
+                continue
+
             addr = peer['adr'].entries['addr'].entries
             last_seen, m_ip, m_port = peer['last_seen'], addr['m_ip'], addr['m_port']
+
+            # reinterpret m_ip as big endian
+            m_ip = c_uint32(m_ip.to_bytes(), endian='big')
+
             peers.append({
                 'last_seen': peer['last_seen'],
                 'ip': m_ip,
