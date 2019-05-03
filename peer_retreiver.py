@@ -30,16 +30,22 @@ buckets = []
 
 while 1:
     buffer = sock.recv(8)
+    if not buffer:
+        sys.stderr.write("Invalid response; exiting\n")
+        break
 
-    if buffer.startswith(bytes(LEVIN_SIGNATURE)):
-        bucket = Bucket.from_buffer(signature=buffer, sock=sock)
-        buckets.append(bucket)
+    if not buffer.startswith(bytes(LEVIN_SIGNATURE)):
+        sys.stderr.write("Invalid response; exiting\n")
+        break
 
-        if bucket.command == 1001:
-            peers = bucket.get_peers() or []
+    bucket = Bucket.from_buffer(signature=buffer, sock=sock)
+    buckets.append(bucket)
 
-            for peer in peers:
-                print('%s:%d' % (peer['ip'].ipv4, peer['port'].value))
+    if bucket.command == 1001:
+        peers = bucket.get_peers() or []
 
-            sock.close()
-            break
+        for peer in peers:
+            print('%s:%d' % (peer['ip'].ipv4, peer['port'].value))
+
+        sock.close()
+        break
