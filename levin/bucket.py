@@ -1,3 +1,4 @@
+import logging
 import sys
 import struct
 import socket
@@ -8,6 +9,7 @@ from levin.constants import *
 from levin.exceptions import BadArgumentException
 from levin.ctypes import *
 
+log = logging.getLogger()
 
 class Bucket:
     def __init__(self):
@@ -54,9 +56,11 @@ class Bucket:
         bucket.protocol_version = LEVIN_PROTOCOL_VER_1
 
     @staticmethod
-    def create_handshake_request(my_port: int = 0, network_id: bytes = None,
-                                 peer_id: bytes = b'\x41\x41\x41\x41\x41\x41\x41\x41',
-                                 verbose=False):
+    def create_handshake_request(
+        my_port: int = 0,
+        network_id: bytes = None,
+        peer_id: bytes = b'\x41\x41\x41\x41\x41\x41\x41\x41',
+    ):
         """
         Helper function to create a handshake request. Does not require
         parameters but you can use them to impersonate a legit node.
@@ -67,17 +71,29 @@ class Bucket:
         :return:
         """
         handshake_section = Section.handshake_request(peer_id=peer_id, network_id=network_id, my_port=my_port)
-        bucket = Bucket.create_request(1001, section=handshake_section)
+        bucket = Bucket.create_request(P2P_COMMAND_HANDSHAKE.value, section=handshake_section)
 
-        if verbose:
-            print(">> created packet \'%s\'" % P2P_COMMANDS[bucket.command])
+        log.debug(">> created packet '%s'" % P2P_COMMANDS[bucket.command])
 
         header = bucket.header()
         body = bucket.payload()
         return bucket
 
+    @staticmethod
+    def create_stat_info_request(
+        peer_id: bytes = b"\x41\x41\x41\x41\x41\x41\x41\x41",
+    ):
+        stat_info_section = Section.stat_info_request(peer_id=peer_id)
+        log.debug(stat_info_section.entries["proof_of_trust"].entries.keys())
+        bucket = Bucket.create_request(
+            P2P_COMMAND_REQUEST_STAT_INFO.value, section=stat_info_section
+        )
+
+        log.debug(">> created packet '%s'" % P2P_COMMANDS[bucket.command])
+        return bucket
+
     @classmethod
-    def from_buffer(cls, signature: c_uint64, sock: socket.socket, verbose: bool = False):
+    def from_buffer(cls, signature: c_uint64, sock: socket.socket):
         if isinstance(signature, bytes):
             signature = c_uint64(signature)
         # if isinstance(buffer, bytes):
@@ -111,14 +127,12 @@ class Bucket:
 
         bucket.payload_section = None
 
-        if verbose:
-            print("<< received packet \'%s\'" % P2P_COMMANDS[bucket.command])
+        log.debug("<< received packet '%s'" % P2P_COMMANDS[bucket.command])
 
         from levin.reader import LevinReader
         bucket.payload_section = LevinReader(BytesIO(bucket.payload)).read_payload()
 
-        if verbose:
-            print("<< parsed packet \'%s\'" % P2P_COMMANDS[bucket.command])
+        log.debug("<< parsed packet '%s'" % P2P_COMMANDS[bucket.command])
         return bucket
 
     def header(self):

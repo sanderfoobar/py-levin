@@ -4,10 +4,19 @@ import ipaddress
 from io import BytesIO
 from datetime import datetime
 from ctypes import (
-    c_ushort as _c_ushort, c_ubyte as _c_ubyte, c_uint8 as _c_uint8,
-    c_uint16 as _c_uint16, c_uint32 as _c_uint32, c_uint64 as _c_uint64,
-    c_short as _c_short, c_byte as _c_byte, c_int8 as _c_int8, c_int16 as _c_int16,
-    c_int32 as _c_int32, c_int64 as _c_int64)
+    c_ushort as _c_ushort,
+    c_ubyte as _c_ubyte,
+    c_uint8 as _c_uint8,
+    c_uint16 as _c_uint16,
+    c_uint32 as _c_uint32,
+    c_uint64 as _c_uint64,
+    c_short as _c_short,
+    c_byte as _c_byte,
+    c_int8 as _c_int8,
+    c_int16 as _c_int16,
+    c_int32 as _c_int32,
+    c_int64 as _c_int64,
+)
 
 from levin.exceptions import BadArgumentException
 
