@@ -43,7 +43,7 @@ class LevinReader:
     def read_section_name(self) -> str:
         len_name = c_ubyte.from_buffer(self.buffer)
         name = self.buffer.read(len_name.value)
-        return name.decode('ascii')
+        return name.decode("ascii")
 
     def load_storage_entry(self):
         _type = c_ubyte.from_buffer(self.buffer)
@@ -125,7 +125,7 @@ class LevinReader:
         elif size_mask == PORTABLE_RAW_SIZE_MARK_INT64:
             v = rshift(self.read_rest(b, 7), 2)
         else:
-            raise IOError('invalid var_int')
+            raise IOError("invalid var_int")
         return v
 
     def read_rest(self, first_byte: int, _bytes: int):

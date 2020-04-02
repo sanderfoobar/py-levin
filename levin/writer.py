@@ -23,7 +23,7 @@ class LevinWriter:
     def put_section(self, section: Section):
         self.write_var_in(len(section))
         for k, v in section.entries.items():
-            _k = k.encode('ascii')
+            _k = k.encode("ascii")
             self.write(bytes(c_ubyte(len(_k))))
             self.write(_k)
             self.serialized_write(v)

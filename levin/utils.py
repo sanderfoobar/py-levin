@@ -7,7 +7,7 @@ from io import BytesIO
 
 
 def ip2int(addr):
-    return struct.unpack("!I", socket.inetaton(addr))[0]
+    return struct.unpack("!I", socket.inet_aton(addr))[0]
 
 
 def int2ip(addr):

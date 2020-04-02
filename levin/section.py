@@ -55,6 +55,25 @@ class Section:
         section.add("support_flags", P2P_SUPPORT_FLAGS)
         return section
 
+    @classmethod
+    def stat_info_request(cls, peer_id: bytes = None):
+        if not peer_id:
+            peer_id = random.getrandbits(64)
+
+        signature = bytes.fromhex(
+            "418015bb9ae982a1975da7d79277c2705727a56894ba0fb246adaabb1f4632e3"
+        )
+
+        section = cls()
+        proof_of_trust = Section()
+        proof_of_trust.add("peer_id", c_uint64(peer_id))
+        proof_of_trust.add("time", c_uint64(int(time())))
+        proof_of_trust.add("sign", c_string(signature))
+
+        section.add("proof_of_trust", proof_of_trust)
+
+        return section
+
     def __bytes__(self):
         from levin.writer import LevinWriter
 
