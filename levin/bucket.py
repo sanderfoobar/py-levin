@@ -70,14 +70,12 @@ class Bucket:
         :param verbose:
         :return:
         """
-        handshake_section = Section.handshake_request(
-            peer_id=peer_id, network_id=network_id, my_port=my_port
-        )
-        bucket = Bucket.create_request(
-            P2P_COMMAND_HANDSHAKE.value, section=handshake_section
-        )
+        handshake_section = Section.handshake_request(peer_id=peer_id, network_id=network_id, my_port=my_port)
+        bucket = Bucket.create_request(P2P_COMMAND_HANDSHAKE.value, section=handshake_section)
+
         log.debug(">> created packet '%s'" % P2P_COMMANDS[bucket.command])
-            header = bucket.header()
+
+        header = bucket.header()
         body = bucket.payload()
         return bucket
 
