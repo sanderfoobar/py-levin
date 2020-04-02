@@ -27,9 +27,7 @@ class _CType:
         self.endian = endian
 
     @classmethod
-    def from_buffer(
-        cls, buffer, endian: str = "little", padding: bytes = None
-    ):
+    def from_buffer(cls, buffer, endian: str = "little", padding: bytes = None):
         if isinstance(buffer, BytesIO):
             buffer = buffer.read(cls.NBYTES)
         elif isinstance(buffer, socket.socket):
