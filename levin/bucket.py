@@ -15,7 +15,7 @@ class Bucket:
     def __init__(self):
         self.signature = LEVIN_SIGNATURE
         if self.signature != LEVIN_SIGNATURE:
-            raise BadArgumentException("Bender's nightmare")
+            raise BadArgumentException('Bender\'s nightmare')
 
         self.cb = None
         self.return_data = None
@@ -59,7 +59,7 @@ class Bucket:
     def create_handshake_request(
         my_port: int = 0,
         network_id: bytes = None,
-        peer_id: bytes = b"\x41\x41\x41\x41\x41\x41\x41\x41",
+        peer_id: bytes = b'\x41\x41\x41\x41\x41\x41\x41\x41',
     ):
         """
         Helper function to create a handshake request. Does not require
@@ -136,10 +136,10 @@ class Bucket:
         return bucket
 
     def header(self):
-        return b"".join((
+        return b''.join((
             bytes(LEVIN_SIGNATURE),
             bytes(self.cb),
-            b"\x01" if self.return_data else b"\x00",
+            b'\x01' if self.return_data else b'\x00',
             bytes(self.command),
             bytes(self.return_code),
             bytes(self.flags),

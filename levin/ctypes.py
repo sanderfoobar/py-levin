@@ -27,7 +27,7 @@ class _CType:
         self.endian = endian
 
     @classmethod
-    def from_buffer(cls, buffer, endian: str = "little", padding: bytes = None):
+    def from_buffer(cls, buffer, endian: str = 'little', padding: bytes = None):
         if isinstance(buffer, BytesIO):
             buffer = buffer.read(cls.NBYTES)
         elif isinstance(buffer, socket.socket):
@@ -35,23 +35,23 @@ class _CType:
 
         if len(buffer) < cls.NBYTES:
             if not padding:
-                _bytes = "bytes" if cls.NBYTES > 1 else "byte"
+                _bytes = 'bytes' if cls.NBYTES > 1 else 'byte'
                 raise BadArgumentException("requires a buffer of %d %s, received %d" % (cls.NBYTES, _bytes, len(buffer)))
 
-            func_padding = bytes.ljust if endian == "little" else bytes.rjust
+            func_padding = bytes.ljust if endian == 'little' else bytes.rjust
             buffer = func_padding(buffer, cls.NBYTES, padding)
 
-        _endian = "<" if endian == "little" else ">"
-        type_struct = cls.TYPE_STRUCT if hasattr(cls, "TYPE_STRUCT") else cls.TYPE._type_
-        value = struct.unpack("%s%s" % (_endian, type_struct), buffer)[0]
+        _endian = '<' if endian == 'little' else '>'
+        type_struct = cls.TYPE_STRUCT if hasattr(cls, 'TYPE_STRUCT') else cls.TYPE._type_
+        value = struct.unpack('%s%s' % (_endian, type_struct), buffer)[0]
         return cls(value, endian)
 
     def to_bytes(self):
         if isinstance(self.value, (int, bool)):
-            type_struct = self.TYPE_STRUCT if hasattr(self, "TYPE_STRUCT") else self.TYPE._type_
-            return struct.pack("%s%s" % ("<" if self.endian == "little" else ">", type_struct), self.value)
+            type_struct = self.TYPE_STRUCT if hasattr(self, 'TYPE_STRUCT') else self.TYPE._type_
+            return struct.pack('%s%s' % ('<' if self.endian == 'little' else '>', type_struct), self.value)
         elif isinstance(self.value, bytes):
-            if self.endian == "little":
+            if self.endian == 'little':
                 return self.value[::-1]
             return self.value
 
@@ -60,7 +60,7 @@ class _CType:
             try:
                 self.value.to_bytes(self.NBYTES, byteorder=self.endian, signed=self.SIGNED)
             except OverflowError as e:
-                raise OverflowError("Value '%d' does not fit in %s." % (self.value, self.__class__.__name__))
+                raise OverflowError("Value \'%d\' does not fit in %s." % (self.value, self.__class__.__name__))
 
     def __len__(self):
         if isinstance(self.value, bytes):
@@ -181,15 +181,15 @@ class _CType:
 
 
 class _IntType(_CType):
-    def __init__(self, value, endian="little"):
+    def __init__(self, value, endian='little'):
         super(_IntType, self).__init__(value, endian)
         self._overflows()
 
     def __repr__(self):
-        _signed = "unsigned" if not self.SIGNED else "signed"
-        _bytes = "bytes" if self.NBYTES > 1 else "byte"
+        _signed = 'unsigned' if not self.SIGNED else 'signed'
+        _bytes = 'bytes' if self.NBYTES > 1 else 'byte'
         _cls_name = self.__class__.__name__
-        return "'%d' - %s - %s %d %s" % (self.value, _cls_name, _signed, self.NBYTES, _bytes)
+        return '\'%d\' - %s - %s %d %s' % (self.value, _cls_name, _signed, self.NBYTES, _bytes)
 
 
 class c_int16(_IntType):
@@ -197,7 +197,7 @@ class c_int16(_IntType):
     NBYTES = 2
     SIGNED = True
 
-    def __init__(self, value, endian="little"):
+    def __init__(self, value, endian='little'):
         super(c_int16, self).__init__(value, endian)
 
 
@@ -206,7 +206,7 @@ class c_uint16(_IntType):
     NBYTES = 2
     SIGNED = False
 
-    def __init__(self, value, endian="little"):
+    def __init__(self, value, endian='little'):
         super(c_uint16, self).__init__(value, endian)
 
 
@@ -215,7 +215,7 @@ class c_int32(_IntType):
     NBYTES = 4
     SIGNED = True
 
-    def __init__(self, value, endian="little"):
+    def __init__(self, value, endian='little'):
         super(c_int32, self).__init__(value, endian)
 
 
@@ -224,7 +224,7 @@ class c_uint32(_IntType):
     NBYTES = 4
     SIGNED = False
 
-    def __init__(self, value, endian="little"):
+    def __init__(self, value, endian='little'):
         super(c_uint32, self).__init__(value, endian)
 
     @property
@@ -234,11 +234,11 @@ class c_uint32(_IntType):
 
 class c_int64(_IntType):
     TYPE = _c_uint64
-    TYPE_STRUCT = "q"
+    TYPE_STRUCT = 'q'
     NBYTES = 8
     SIGNED = True
 
-    def __init__(self, value, endian="little"):
+    def __init__(self, value, endian='little'):
         super(c_int64, self).__init__(value, endian)
 
     @property
@@ -248,11 +248,11 @@ class c_int64(_IntType):
 
 class c_uint64(_IntType):
     TYPE = _c_uint64
-    TYPE_STRUCT = "Q"
+    TYPE_STRUCT = 'Q'
     NBYTES = 8
     SIGNED = False
 
-    def __init__(self, value, endian="little"):
+    def __init__(self, value, endian='little'):
         super(c_uint64, self).__init__(value, endian)
 
     @property
@@ -265,12 +265,12 @@ class c_byte(_IntType):
     NBYTES = 1
     SIGNED = True
 
-    def __init__(self, value, endian="little"):
+    def __init__(self, value, endian='little'):
         super(c_byte, self).__init__(value, endian)
 
 
 class c_bytes(_CType):
-    def __init__(self, value, endian="little"):
+    def __init__(self, value, endian='little'):
         super(c_bytes, self).__init__(value, endian)
 
 
@@ -279,12 +279,12 @@ class c_ubyte(_IntType):
     NBYTES = 1
     SIGNED = False
 
-    def __init__(self, value, endian="little"):
+    def __init__(self, value, endian='little'):
         super(c_ubyte, self).__init__(value, endian)
 
 
 class c_string(_CType):
-    ENCODING = "ascii"
+    ENCODING = 'ascii'
 
     def __init__(self, value):
         super(c_string, self).__init__(value)
@@ -295,10 +295,10 @@ class c_string(_CType):
 
 
 class c_bool(_CType):
-    TYPE_STRUCT = "?"
+    TYPE_STRUCT = '?'
     NBYTES = 1
 
     def __init__(self, value, endian=None):
         if value not in [True, False]:
-            raise BadArgumentException("bool")
+            raise BadArgumentException('bool')
         super(c_bool, self).__init__(value)
