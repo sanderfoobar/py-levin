@@ -45,7 +45,10 @@ while 1:
         peers = bucket.get_peers() or []
 
         for peer in peers:
-            print('%s:%d' % (peer['ip'].ipv4, peer['port'].value))
+            try:
+                print('%s:%d' % (peer['ip'].ip, peer['port'].value))
+            except:
+                pass
 
         sock.close()
         break
