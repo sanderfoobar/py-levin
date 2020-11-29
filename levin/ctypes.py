@@ -228,8 +228,12 @@ class c_uint32(_IntType):
         super(c_uint32, self).__init__(value, endian)
 
     @property
-    def ipv4(self):
-        return ipaddress.IPv4Address(self.value)
+    def ipv4(self) -> str:
+        return str(ipaddress.IPv4Address(self.value))
+
+    @property
+    def ip(self) -> str:
+        return self.ipv4
 
 
 class c_int64(_IntType):
@@ -254,6 +258,17 @@ class c_uint64(_IntType):
 
     def __init__(self, value, endian='little'):
         super(c_uint64, self).__init__(value, endian)
+
+    @property
+    def ipv6(self) -> str:
+        val = socket.inet_ntop(socket.AF_INET6, self.value)
+        if val.startswith("::ffff:"):
+            val = val[7:]
+        return val
+
+    @property
+    def ip(self) -> str:
+        return self.ipv6
 
     @property
     def date_utc(self):

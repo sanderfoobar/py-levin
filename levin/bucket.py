@@ -164,17 +164,22 @@ class Bucket:
                 continue
 
             addr = peer['adr'].entries['addr'].entries
-            last_seen, m_ip, m_port = peer['last_seen'], addr['m_ip'], addr['m_port']
+            ipv4 = True if "m_ip" in addr else False
+            if not ipv4 and not "addr" in addr:
+                continue
 
-            # reinterpret m_ip as big endian
-            m_ip = c_uint32(m_ip.to_bytes(), endian='big')
+            if ipv4 and len(addr["m_ip"]) == 4:
+                m_ip, m_port = addr['m_ip'], addr['m_port']
+                m_ip = c_uint32(m_ip.to_bytes(), endian='big')
+            elif len(addr["addr"]) == 16:
+                m_ip, m_port = addr['addr'], addr["m_port"]
+                m_ip = c_uint64(m_ip, endian="big")
+            else:
+                continue
 
             peers.append({
-                'last_seen': peer['last_seen'],
                 'ip': m_ip,
                 'port': m_port
             })
 
-        # sort on last seen
-        peers = sorted(peers, key=lambda k: k['last_seen'], reverse=True)
         return peers
